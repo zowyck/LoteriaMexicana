@@ -37,37 +37,37 @@
 
         <img id="cardImage" src="assets/Logo.png" alt="Lotería Mexicana" onclick="toggleAuto()">
 
-        <div class="controls">
-            <button id="playPauseBtn" onclick="toggleAuto()">▶ Iniciar</button>
-            <button onclick="drawCard()">⏭ Carta</button>
-            <button onclick="restartGame()">🔄 Reiniciar</button>
-        </div>
+<div class="controls">
+    <button id="playPauseBtn" onclick="toggleAuto()">▶ Iniciar</button>
+    <button onclick="drawCard()">⏭ Carta</button>
+    <button onclick="restartGame()">🔄 Reiniciar</button>
+</div>
 
-        <div class="speedBox">
-            <button id="speedBtn" class="speedBtn" onclick="toggleSpeedMenu(event)">
-                ⏱ 7 s
-            </button>
-            <div id="speedMenu" class="speedMenu">
-                <button onclick="setSpeed(4000, this)">4 s</button>
-                <button onclick="setSpeed(5000, this)">5 s</button>
-                <button onclick="setSpeed(6000, this)">6 s</button>
-                <button onclick="setSpeed(7000, this)" class="active">7 s</button>
-                <button onclick="setSpeed(8000, this)">8 s</button>
-                <button onclick="setSpeed(9000, this)">9 s</button>
-                <button onclick="setSpeed(10000, this)">10 s</button>
-            </div>
+<div class="speedBox">
+    <button id="speedBtn" class="speedBtn" onclick="toggleSpeedMenu(event)">
+        ⏱ 7 s
+    </button>
+    <div id="speedMenu" class="speedMenu">
+        <button onclick="setSpeed(4000, this)">4 s</button>
+        <button onclick="setSpeed(5000, this)">5 s</button>
+        <button onclick="setSpeed(6000, this)">6 s</button>
+        <button onclick="setSpeed(7000, this)" class="active">7 s</button>
+        <button onclick="setSpeed(8000, this)">8 s</button>
+        <button onclick="setSpeed(9000, this)">9 s</button>
+        <button onclick="setSpeed(10000, this)">10 s</button>
+    </div>
 
-            <!-- Select oculto: guarda el valor real que usan startAuto y setSpeed -->
-            <select id="speed" style="display:none;">
-                <option value="4000">4 s</option>
-                <option value="5000">5 s</option>
-                <option value="6000">6 s</option>
-                <option value="7000" selected>7 s</option>
-                <option value="8000">8 s</option>
-                <option value="9000">9 s</option>
-                <option value="10000">10 s</option>
-            </select>
-        </div>
+    <!-- Select oculto -->
+    <select id="speed" style="display:none;">
+        <option value="4000">4 s</option>
+        <option value="5000">5 s</option>
+        <option value="6000">6 s</option>
+        <option value="7000" selected>7 s</option>
+        <option value="8000">8 s</option>
+        <option value="9000">9 s</option>
+        <option value="10000">10 s</option>
+    </select>
+</div>
 
     </div>
 
