@@ -6,8 +6,8 @@ const deck = [];
 let currentDeck = [];
 const history = [];
 
-const CACHE_NAME = "loteria-v5";
-const TOTAL_FILES = 5 + 108; // base + 54 png + 54 mp3
+const CACHE_NAME = "loteria-v6";
+const TOTAL_FILES = 6 + 108; // base + 54 png + 54 mp3
 
 // ============================================================
 // 54 cartas (única fuente de verdad)
