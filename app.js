@@ -12,14 +12,14 @@ const history = [];
 // ============================================================
 // CONFIGURACIÓN DE CACHÉ Y VERSIÓN
 // ============================================================
-const CACHE_NAME = "loteria-v6";      // debe coincidir con service-worker.js
-const TOTAL_FILES = 6 + 108;          // 6 base (incluye Logo) + 54 png + 54 mp3
-const APP_VERSION = "1.1.0";          // súbela cuando cambies assets
-const DIAS_REVISION = 7;              // días entre revisiones automáticas
+const CACHE_NAME = "loteria-v6";
+const TOTAL_FILES = 6 + 108;
+const APP_VERSION = "1.2.0";
+const DIAS_REVISION = 7;
 const LS_KEY = "loteria_precache_info";
 
 // ============================================================
-// 54 CARTAS (única fuente de verdad)
+// 54 CARTAS
 // ============================================================
 for (let i = 1; i <= 54; i++) {
     deck.push({
@@ -54,7 +54,7 @@ async function pedirPersistencia() {
 }
 
 // ============================================================
-// CONTROL DE VERSIÓN (evita re-verificar en cada apertura)
+// CONTROL DE VERSIÓN
 // ============================================================
 function debePrecachear() {
     try {
@@ -86,7 +86,7 @@ function marcarPrecacheCompleto() {
 }
 
 // ============================================================
-// DESBLOQUEO DE AUDIO (necesario en Chrome PC y Android)
+// DESBLOQUEO DE AUDIO
 // ============================================================
 let audioUnlocked = false;
 function unlockAudio() {
@@ -103,24 +103,16 @@ function unlockAudio() {
 );
 
 // ============================================================
-// MOSTRAR / OCULTAR TEXTOS DE JUEGO
+// MOSTRAR / OCULTAR BARRA SUPERIOR
 // ============================================================
 function mostrarTextosJuego() {
-    const titulo = document.getElementById("titulo");
-    const name = document.getElementById("cardName");
-    const rem = document.getElementById("remaining");
-    if (titulo) titulo.style.display = "block";
-    if (name) name.style.display = "block";
-    if (rem) rem.style.display = "block";
+    const topBar = document.getElementById("topBar");
+    if (topBar) topBar.style.display = "flex";
 }
 
 function ocultarTextosJuego() {
-    const titulo = document.getElementById("titulo");
-    const name = document.getElementById("cardName");
-    const rem = document.getElementById("remaining");
-    if (titulo) titulo.style.display = "none";
-    if (name) name.style.display = "none";
-    if (rem) rem.style.display = "none";
+    const topBar = document.getElementById("topBar");
+    if (topBar) topBar.style.display = "none";
 }
 
 // ============================================================
@@ -220,7 +212,6 @@ shuffle();
 function drawCard() {
     if (currentDeck.length === 0) {
         stopAuto();
-        document.getElementById("cardName").innerText = "Juego terminado";
         return;
     }
 
@@ -244,7 +235,6 @@ function drawCard() {
         }
     });
 
-    document.getElementById("cardName").innerText = "Carta " + card.id;
     document.getElementById("remaining").innerText =
         currentDeck.length + " cartas restantes";
 
@@ -288,6 +278,7 @@ function restartGame() {
     updateHistory();
     document.getElementById("cardImage").src = "assets/Logo.png";
     ocultarTextosJuego();
+    document.getElementById("remaining").innerText = "54 cartas restantes";
 }
 
 // ============================================================
@@ -296,10 +287,8 @@ function restartGame() {
 window.addEventListener("load", async () => {
     console.log("Lotería cargada");
 
-    // 1. Persistencia
     await pedirPersistencia();
 
-    // 2. Registrar SW
     if ("serviceWorker" in navigator) {
         try {
             await navigator.serviceWorker.register("./service-worker.js");
@@ -310,13 +299,11 @@ window.addEventListener("load", async () => {
         }
     }
 
-    // 3. ¿Necesitamos precargar?
     if (!debePrecachear()) {
         updateProgressUI(1, 1, "", true);
         return;
     }
 
-    // 4. Precargar con barra y timeout duro
     const hardTimeout = setTimeout(() => {
         updateProgressUI(1, 1, "", true);
     }, 50000);
