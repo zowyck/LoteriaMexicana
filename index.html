@@ -27,43 +27,35 @@
 </div>
 
 <div class="container">
-
     <div class="main">
-
         <h1>Lotería Mexicana</h1>
-
         <img id="cardImage" src="assets/Logo.png" alt="Lotería Mexicana">
-
+    </div>
+    <div class="history">
+        <h3>Últimas cartas</h3>
+        <div id="historyList"></div>
+    </div>
         <h2 id="cardName">
             Presiona Iniciar
         </h2>
-
         <div id="remaining">
             54 cartas restantes
         </div>
-
         <div class="controls">
-
             <button id="playPauseBtn" onclick="toggleAuto()">
                 ▶ Iniciar
             </button>
-
             <button onclick="drawCard()">
                 ⏭ Carta
             </button>
-
             <button onclick="restartGame()">
                 🔄 Reiniciar
             </button>
-
         </div>
 
         <div class="speedBox">
-
             <label>Tiempo:</label>
-
             <select id="speed">
-
                 <option value="4000">4 s</option>
                 <option value="5000">5 s</option>
                 <option value="6000">6 s</option>
@@ -71,20 +63,9 @@
                 <option value="8000">8 s</option>
                 <option value="9000">9 s</option>
                 <option value="10000">10 s</option>
-
             </select>
-
         </div>
 
-    </div>
-
-    <div class="history">
-
-        <h3>Últimas cartas</h3>
-
-        <div id="historyList"></div>
-
-    </div>
 
 </div>
 
