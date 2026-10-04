@@ -124,3 +124,90 @@ button:hover{
 
     background:white;
 }
+
+/* ============================================================
+   BARRA DE PROGRESO DE DESCARGA OFFLINE
+   ============================================================ */
+#loadProgress{
+    position:fixed;
+    inset:0;
+    background:rgba(15,23,42,.95);
+    color:white;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    z-index:9999;
+    padding:20px;
+    transition:opacity .4s ease;
+}
+
+#loadProgress.hidden{
+    opacity:0;
+    pointer-events:none;
+}
+
+#loadText{
+    margin-bottom:16px;
+    font-size:1.1rem;
+    color:#facc15;
+    text-align:center;
+}
+
+.loadBarWrap{
+    width:80%;
+    max-width:400px;
+    height:14px;
+    background:#1e293b;
+    border-radius:8px;
+    overflow:hidden;
+    box-shadow:0 0 20px rgba(0,0,0,.4);
+}
+
+#loadBar{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,#22c55e,#facc15);
+    border-radius:8px;
+    transition:width .25s ease;
+}
+
+/* ============================================================
+   RESPONSIVE (móvil): mejoras menores sin romper nada
+   ============================================================ */
+@media (max-width: 600px){
+
+    h1{
+        font-size:1.5rem;
+    }
+
+    #cardImage{
+        min-height:300px;
+    }
+
+    button{
+        padding:10px 14px;
+        font-size:14px;
+    }
+
+    .history{
+        width:100%;
+        display:flex;
+        flex-wrap:wrap;
+        justify-content:center;
+        gap:8px;
+    }
+
+    .history h3{
+        width:100%;
+    }
+
+    .historyCard{
+        width:60px;
+        margin-bottom:0;
+    }
+
+    #loadText{
+        font-size:1rem;
+    }
+}
