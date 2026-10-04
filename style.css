@@ -38,6 +38,9 @@ h1{
     border-radius:15px;
     box-shadow:0 0 20px rgba(0,0,0,.4);
     padding:20px;
+    cursor:pointer;
+    user-select:none;
+    -webkit-tap-highlight-color:transparent;
 }
 
 #cardName{
