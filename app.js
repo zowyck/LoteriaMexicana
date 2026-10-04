@@ -21,6 +21,38 @@ for (let i = 1; i <= 54; i++) {
 }
 
 // ============================================================
+// PERSISTENCIA DEL ALMACENAMIENTO
+// Pide al navegador que NO borre la caché automáticamente
+// ============================================================
+async function pedirPersistencia() {
+    if (!navigator.storage || !navigator.storage.persist) {
+        console.log("[App] Persistencia no soportada en este navegador");
+        return false;
+    }
+
+    try {
+        // ¿Ya está concedida?
+        const yaPersistente = await navigator.storage.persisted();
+        if (yaPersistente) {
+            console.log("[App] ✅ Persistencia ya concedida");
+            return true;
+        }
+
+        // Pedirla
+        const concedida = await navigator.storage.persist();
+        if (concedida) {
+            console.log("[App] ✅ Persistencia concedida");
+        } else {
+            console.warn("[App] ⚠️ Persistencia denegada (el navegador puede borrar la caché)");
+        }
+        return concedida;
+    } catch (err) {
+        console.warn("[App] Error pidiendo persistencia:", err);
+        return false;
+    }
+}
+
+// ============================================================
 // DESBLOQUEO DE AUDIO (necesario en Chrome PC y Android)
 // ============================================================
 let audioUnlocked = false;
@@ -216,6 +248,10 @@ window.addEventListener("load", async () => {
         updateProgressUI(1, 1, "", true);
     }, 50000);
 
+    // 1. Pedir persistencia ANTES de cachear (mejor momento)
+    await pedirPersistencia();
+
+    // 2. Registrar SW
     if ("serviceWorker" in navigator) {
         try {
             await navigator.serviceWorker.register("./service-worker.js");
@@ -226,5 +262,6 @@ window.addEventListener("load", async () => {
         }
     }
 
+    // 3. Precargar con barra
     trackProgress().finally(() => clearTimeout(hardTimeout));
 });
