@@ -12,7 +12,7 @@ const history = [];
 // ============================================================
 // CONFIGURACIÓN DE CACHÉ Y VERSIÓN
 // ============================================================
-const CACHE_NAME = "loteria-v6";
+const CACHE_NAME = "loteria-v7";
 const TOTAL_FILES = 6 + 108;
 const APP_VERSION = "1.5.0";
 const LS_KEY = "loteria_precache_info";
