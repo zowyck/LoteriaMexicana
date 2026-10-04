@@ -6,6 +6,7 @@ const baseFiles = [
     "./index.html",
     "./style.css",
     "./app.js",
+    "./assets/Logo.png",
     "./manifest.json"
 ];
 
