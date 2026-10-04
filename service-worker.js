@@ -1,4 +1,4 @@
-const CACHE_NAME = "loteria-v5";
+const CACHE_NAME = "loteria-v6";
 
 // Recursos base
 const baseFiles = [
@@ -19,26 +19,54 @@ for (let i = 1; i <= 54; i++) {
 const files = [...baseFiles, ...cardFiles];
 
 // ============================================================
-// INSTALL: precachea todo. Si falla mucho, aborta.
+// Utilidad: fetch con timeout (evita cuelgues en móvil)
+// ============================================================
+function fetchWithTimeout(url, ms = 8000) {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error("Timeout: " + url)), ms);
+        fetch(url, { cache: "no-store" })
+            .then(res => {
+                clearTimeout(timer);
+                if (!res.ok) reject(new Error("HTTP " + res.status + ": " + url));
+                else resolve(res);
+            })
+            .catch(err => {
+                clearTimeout(timer);
+                reject(err);
+            });
+    });
+}
+
+// ============================================================
+// INSTALL: precachea en lotes con timeout por archivo
 // ============================================================
 self.addEventListener("install", event => {
     event.waitUntil((async () => {
         const cache = await caches.open(CACHE_NAME);
         let ok = 0, fail = 0;
 
-        for (const url of files) {
-            try {
-                await cache.add(url);
-                ok++;
-            } catch (err) {
-                fail++;
-                console.warn("[SW] Falló:", url);
+        const BATCH = 6;
+        for (let i = 0; i < files.length; i += BATCH) {
+            const lote = files.slice(i, i + BATCH);
+            const results = await Promise.allSettled(
+                lote.map(async url => {
+                    const res = await fetchWithTimeout(url, 8000);
+                    await cache.put(url, res);
+                    return url;
+                })
+            );
+            for (const r of results) {
+                if (r.status === "fulfilled") ok++;
+                else {
+                    fail++;
+                    console.warn("[SW] Falló:", r.reason?.message || r.reason);
+                }
             }
         }
 
         console.log(`[SW] Precarga: ${ok} ok, ${fail} fallos de ${files.length}`);
 
-        // Si falló más del 20%, no reemplaza el SW viejo
+        // Si falló más del 20%, aborta (mantiene SW viejo)
         if (fail > files.length * 0.2) {
             throw new Error(`[SW] Abortado: ${fail} fallos`);
         }
@@ -91,22 +119,4 @@ self.addEventListener("fetch", event => {
             });
         })
     );
-});
-
-// ============================================================
-// MENSAJE: responde al cliente sobre el estado del caché
-// ============================================================
-self.addEventListener("message", event => {
-    if (event.data?.type === "CHECK_CACHE") {
-        event.waitUntil((async () => {
-            const cache = await caches.open(CACHE_NAME);
-            const cached = await cache.keys();
-            event.source.postMessage({
-                type: "CACHE_STATUS",
-                total: files.length,
-                cached: cached.length,
-                complete: cached.length >= files.length
-            });
-        })());
-    }
 });
