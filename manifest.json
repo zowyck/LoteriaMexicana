@@ -1,6 +1,6 @@
 {
   "name": "Loteria Mexicana",
-  "short_name": "Loteria",
+  "short_name": "Loteria Mexicana",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#0f172a",
