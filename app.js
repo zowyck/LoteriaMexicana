@@ -14,7 +14,7 @@ const history = [];
 // ============================================================
 const CACHE_NAME = "loteria-v6";
 const TOTAL_FILES = 6 + 108;
-const APP_VERSION = "1.2.0";
+const APP_VERSION = "1.3.0";
 const DIAS_REVISION = 7;
 const LS_KEY = "loteria_precache_info";
 
@@ -30,13 +30,10 @@ for (let i = 1; i <= 54; i++) {
 }
 
 // ============================================================
-// PERSISTENCIA DEL ALMACENAMIENTO
+// PERSISTENCIA
 // ============================================================
 async function pedirPersistencia() {
-    if (!navigator.storage || !navigator.storage.persist) {
-        console.log("[App] Persistencia no soportada");
-        return false;
-    }
+    if (!navigator.storage || !navigator.storage.persist) return false;
     try {
         if (await navigator.storage.persisted()) {
             console.log("[App] ✅ Persistencia ya concedida");
@@ -69,7 +66,7 @@ function debePrecachear() {
             console.log(`[App] Pasaron ${dias.toFixed(1)} días, verificando`);
             return true;
         }
-        console.log("[App] Caché vigente, sin verificación");
+        console.log("[App] Caché vigente");
         return false;
     } catch (e) {
         return true;
@@ -114,6 +111,50 @@ function ocultarTextosJuego() {
     const topBar = document.getElementById("topBar");
     if (topBar) topBar.style.display = "none";
 }
+
+// ============================================================
+// SELECTOR DE TIEMPO (botón + menú)
+// ============================================================
+function toggleSpeedMenu(event) {
+    if (event) event.stopPropagation();
+    const menu = document.getElementById("speedMenu");
+    if (!menu) return;
+    menu.classList.toggle("open");
+}
+
+function setSpeed(ms, btn) {
+    // Guarda el valor en el select oculto
+    const select = document.getElementById("speed");
+    if (select) select.value = ms;
+
+    // Actualiza el texto del botón
+    const speedBtn = document.getElementById("speedBtn");
+    if (speedBtn) speedBtn.innerText = "⏱ " + (ms / 1000) + " s";
+
+    // Marca la opción activa
+    document.querySelectorAll("#speedMenu button").forEach(b => b.classList.remove("active"));
+    if (btn) btn.classList.add("active");
+
+    // Cierra el menú
+    const menu = document.getElementById("speedMenu");
+    if (menu) menu.classList.remove("open");
+
+    // Si está jugando, reinicia el timer con la nueva velocidad
+    if (playing) {
+        clearInterval(timer);
+        timer = setInterval(drawCard, ms);
+    }
+}
+
+// Cerrar menú al tocar fuera
+document.addEventListener("click", (e) => {
+    const menu = document.getElementById("speedMenu");
+    const btn = document.getElementById("speedBtn");
+    if (!menu || !btn) return;
+    if (!menu.contains(e.target) && !btn.contains(e.target)) {
+        menu.classList.remove("open");
+    }
+});
 
 // ============================================================
 // BARRA DE PROGRESO
@@ -231,7 +272,6 @@ function drawCard() {
     currentAudio.play().catch(err => {
         if (err.name === "NotAllowedError") {
             unlockAudio();
-            console.warn("[Audio] Haz clic para activar sonido");
         }
     });
 
@@ -256,7 +296,10 @@ function updateHistory() {
 }
 
 function startAuto() {
-    const speed = parseInt(document.getElementById("speed").value);
+    // Lee el valor desde el select oculto
+    const select = document.getElementById("speed");
+    const speed = select ? parseInt(select.value) : 7000;
+
     drawCard();
     timer = setInterval(drawCard, speed);
     playing = true;
@@ -311,45 +354,4 @@ window.addEventListener("load", async () => {
     trackProgress()
         .then(() => marcarPrecacheCompleto())
         .finally(() => clearTimeout(hardTimeout));
-});
-
-// ============================================================
-// SELECTOR DE TIEMPO
-// ============================================================
-function toggleSpeedMenu() {
-    const menu = document.getElementById("speedMenu");
-    if (!menu) return;
-    menu.classList.toggle("open");
-}
-
-function setSpeed(ms, btn) {
-    // Guarda el valor en un input oculto o variable global
-    document.getElementById("speed").value = ms;
-
-    // Actualiza el texto del botón
-    const speedBtn = document.getElementById("speedBtn");
-    if (speedBtn) speedBtn.innerText = "⏱ " + (ms / 1000) + " s";
-
-    // Marca la opción activa
-    document.querySelectorAll("#speedMenu button").forEach(b => b.classList.remove("active"));
-    if (btn) btn.classList.add("active");
-
-    // Cierra el menú
-    document.getElementById("speedMenu").classList.remove("open");
-
-    // Si está jugando, reinicia el timer con la nueva velocidad
-    if (playing) {
-        clearInterval(timer);
-        timer = setInterval(drawCard, ms);
-    }
-}
-
-// Cerrar menú al tocar fuera
-document.addEventListener("click", (e) => {
-    const menu = document.getElementById("speedMenu");
-    const btn = document.getElementById("speedBtn");
-    if (!menu || !btn) return;
-    if (!menu.contains(e.target) && !btn.contains(e.target)) {
-        menu.classList.remove("open");
-    }
 });
