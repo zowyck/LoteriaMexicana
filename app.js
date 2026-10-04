@@ -6,7 +6,12 @@ const deck = [];
 let currentDeck = [];
 const history = [];
 
-// 54 cartas
+const CACHE_NAME = "loteria-v5";
+const TOTAL_FILES = 5 + 108; // base + 54 png + 54 mp3
+
+// ============================================================
+// 54 cartas (única fuente de verdad)
+// ============================================================
 for (let i = 1; i <= 54; i++) {
     deck.push({
         id: i,
@@ -16,7 +21,7 @@ for (let i = 1; i <= 54; i++) {
 }
 
 // ============================================================
-// DESBLOQUEO DE AUDIO (necesario en PC)
+// DESBLOQUEO DE AUDIO (necesario en Chrome PC y Android)
 // ============================================================
 let audioUnlocked = false;
 function unlockAudio() {
@@ -33,11 +38,11 @@ function unlockAudio() {
 );
 
 // ============================================================
-// BARRA DE PROGRESO DE DESCARGA
+// BARRA DE PROGRESO
 // ============================================================
-const TOTAL_FILES = 5 + 108; // base + 54 png + 54 mp3
+let progressTimeout = null;
 
-function updateProgressUI(done, total, text) {
+function updateProgressUI(done, total, text, forceHide = false) {
     const bar = document.getElementById("loadBar");
     const wrap = document.getElementById("loadProgress");
     const label = document.getElementById("loadText");
@@ -48,42 +53,73 @@ function updateProgressUI(done, total, text) {
     bar.style.width = pct + "%";
     if (label) label.innerText = text || `${pct}% (${done}/${total})`;
 
-    if (done >= total) {
-        setTimeout(() => { wrap.style.display = "none"; }, 500);
+    if (done >= total || forceHide) {
+        clearTimeout(progressTimeout);
+        setTimeout(() => wrap.classList.add("hidden"), 500);
     } else {
-        wrap.style.display = "block";
+        wrap.classList.remove("hidden");
     }
 }
 
+function armProgressTimeout() {
+    clearTimeout(progressTimeout);
+    progressTimeout = setTimeout(() => {
+        console.warn("[App] Timeout de precarga, ocultando barra");
+        updateProgressUI(1, 1, "✅ Listo (parcial)", true);
+    }, 45000);
+}
+
 async function trackProgress() {
-    // 1. Primero medimos lo que ya está en caché
-    if (!("caches" in window)) return;
-
-    const cache = await caches.open("loteria-v5");
-    let cached = (await cache.keys()).length;
-    updateProgressUI(cached, TOTAL_FILES);
-
-    // 2. Descarga forzada en cliente con progreso
-    const urls = [
-        "./", "./index.html", "./style.css", "./app.js", "./manifest.json",
-        ...deck.flatMap(c => [c.image, c.sound])
-    ];
-
-    let done = cached;
-    let pending = urls.filter((_, i) => i >= cached); // aproximación
-
-    // Descarga por lotes para no saturar y actualizar progreso
-    const BATCH = 8;
-    for (let i = 0; i < urls.length; i += BATCH) {
-        const lote = urls.slice(i, i + BATCH);
-        await Promise.allSettled(
-            lote.map(url => fetch(url, { cache: "force-cache" }).catch(() => {}))
-        );
-        done = Math.min(urls.length, i + BATCH);
-        updateProgressUI(done, TOTAL_FILES);
+    if (!("caches" in window)) {
+        updateProgressUI(1, 1, "", true);
+        return;
     }
 
-    updateProgressUI(TOTAL_FILES, TOTAL_FILES, "✅ Listo para usar offline");
+    armProgressTimeout();
+
+    try {
+        const cache = await caches.open(CACHE_NAME);
+        const cached = (await cache.keys()).length;
+
+        // Si ya está todo cacheado, ni muestres la barra
+        if (cached >= TOTAL_FILES) {
+            console.log("[App] Caché completa, offline listo");
+            updateProgressUI(TOTAL_FILES, TOTAL_FILES, "✅ Listo", true);
+            return;
+        }
+
+        updateProgressUI(cached, TOTAL_FILES);
+
+        const urls = [
+            "./", "./index.html", "./style.css", "./app.js", "./manifest.json",
+            ...deck.flatMap(c => [c.image, c.sound])
+        ];
+
+        const BATCH = 6;
+        let done = cached;
+
+        for (let i = 0; i < urls.length; i += BATCH) {
+            const lote = urls.slice(i, i + BATCH);
+            await Promise.allSettled(
+                lote.map(url => {
+                    const controller = new AbortController();
+                    const t = setTimeout(() => controller.abort(), 8000);
+                    return fetch(url, {
+                        cache: "force-cache",
+                        signal: controller.signal
+                    }).finally(() => clearTimeout(t)).catch(() => {});
+                })
+            );
+
+            done = Math.min(urls.length, i + BATCH);
+            updateProgressUI(done, TOTAL_FILES);
+        }
+
+        updateProgressUI(TOTAL_FILES, TOTAL_FILES, "✅ Listo para usar offline");
+    } catch (err) {
+        console.error("[App] Error en precarga:", err);
+        updateProgressUI(1, 1, "", true);
+    }
 }
 
 // ============================================================
@@ -176,15 +212,19 @@ function restartGame() {
 window.addEventListener("load", async () => {
     console.log("Lotería cargada");
 
+    const hardTimeout = setTimeout(() => {
+        updateProgressUI(1, 1, "", true);
+    }, 50000);
+
     if ("serviceWorker" in navigator) {
         try {
             await navigator.serviceWorker.register("./service-worker.js");
-            console.log("[App] SW registrado");
+            await navigator.serviceWorker.ready;
+            console.log("[App] SW listo");
         } catch (e) {
             console.error("[App] Error SW:", e);
         }
     }
 
-    // Arranca la descarga con progreso
-    trackProgress();
+    trackProgress().finally(() => clearTimeout(hardTimeout));
 });
