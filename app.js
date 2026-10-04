@@ -1,3 +1,6 @@
+// ============================================================
+// ESTADO GLOBAL
+// ============================================================
 let playing = false;
 let timer = null;
 let currentAudio = null;
@@ -6,11 +9,17 @@ const deck = [];
 let currentDeck = [];
 const history = [];
 
-const CACHE_NAME = "loteria-v7";
-const TOTAL_FILES = 6 + 108; // base + 54 png + 54 mp3
+// ============================================================
+// CONFIGURACIÓN DE CACHÉ Y VERSIÓN
+// ============================================================
+const CACHE_NAME = "loteria-v6";      // debe coincidir con service-worker.js
+const TOTAL_FILES = 6 + 108;          // 6 base (incluye Logo) + 54 png + 54 mp3
+const APP_VERSION = "1.1.0";          // súbela cuando cambies assets
+const DIAS_REVISION = 7;              // días entre revisiones automáticas
+const LS_KEY = "loteria_precache_info";
 
 // ============================================================
-// 54 cartas (única fuente de verdad)
+// 54 CARTAS (única fuente de verdad)
 // ============================================================
 for (let i = 1; i <= 54; i++) {
     deck.push({
@@ -22,34 +31,58 @@ for (let i = 1; i <= 54; i++) {
 
 // ============================================================
 // PERSISTENCIA DEL ALMACENAMIENTO
-// Pide al navegador que NO borre la caché automáticamente
 // ============================================================
 async function pedirPersistencia() {
     if (!navigator.storage || !navigator.storage.persist) {
-        console.log("[App] Persistencia no soportada en este navegador");
+        console.log("[App] Persistencia no soportada");
         return false;
     }
-
     try {
-        // ¿Ya está concedida?
-        const yaPersistente = await navigator.storage.persisted();
-        if (yaPersistente) {
+        if (await navigator.storage.persisted()) {
             console.log("[App] ✅ Persistencia ya concedida");
             return true;
         }
-
-        // Pedirla
         const concedida = await navigator.storage.persist();
-        if (concedida) {
-            console.log("[App] ✅ Persistencia concedida");
-        } else {
-            console.warn("[App] ⚠️ Persistencia denegada (el navegador puede borrar la caché)");
-        }
+        console.log(concedida
+            ? "[App] ✅ Persistencia concedida"
+            : "[App] ⚠️ Persistencia denegada");
         return concedida;
     } catch (err) {
         console.warn("[App] Error pidiendo persistencia:", err);
         return false;
     }
+}
+
+// ============================================================
+// CONTROL DE VERSIÓN (evita re-verificar en cada apertura)
+// ============================================================
+function debePrecachear() {
+    try {
+        const info = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
+        if (!info.version || !info.fecha) return true;
+        if (info.version !== APP_VERSION) {
+            console.log("[App] Versión nueva:", APP_VERSION, "≠", info.version);
+            return true;
+        }
+        const dias = (Date.now() - info.fecha) / (1000 * 60 * 60 * 24);
+        if (dias > DIAS_REVISION) {
+            console.log(`[App] Pasaron ${dias.toFixed(1)} días, verificando`);
+            return true;
+        }
+        console.log("[App] Caché vigente, sin verificación");
+        return false;
+    } catch (e) {
+        return true;
+    }
+}
+
+function marcarPrecacheCompleto() {
+    try {
+        localStorage.setItem(LS_KEY, JSON.stringify({
+            version: APP_VERSION,
+            fecha: Date.now()
+        }));
+    } catch (e) {}
 }
 
 // ============================================================
@@ -70,6 +103,27 @@ function unlockAudio() {
 );
 
 // ============================================================
+// MOSTRAR / OCULTAR TEXTOS DE JUEGO
+// ============================================================
+function mostrarTextosJuego() {
+    const titulo = document.getElementById("titulo");
+    const name = document.getElementById("cardName");
+    const rem = document.getElementById("remaining");
+    if (titulo) titulo.style.display = "block";
+    if (name) name.style.display = "block";
+    if (rem) rem.style.display = "block";
+}
+
+function ocultarTextosJuego() {
+    const titulo = document.getElementById("titulo");
+    const name = document.getElementById("cardName");
+    const rem = document.getElementById("remaining");
+    if (titulo) titulo.style.display = "none";
+    if (name) name.style.display = "none";
+    if (rem) rem.style.display = "none";
+}
+
+// ============================================================
 // BARRA DE PROGRESO
 // ============================================================
 let progressTimeout = null;
@@ -78,7 +132,6 @@ function updateProgressUI(done, total, text, forceHide = false) {
     const bar = document.getElementById("loadBar");
     const wrap = document.getElementById("loadProgress");
     const label = document.getElementById("loadText");
-
     if (!bar || !wrap) return;
 
     const pct = Math.min(100, Math.round((done / total) * 100));
@@ -106,14 +159,12 @@ async function trackProgress() {
         updateProgressUI(1, 1, "", true);
         return;
     }
-
     armProgressTimeout();
 
     try {
         const cache = await caches.open(CACHE_NAME);
         const cached = (await cache.keys()).length;
 
-        // Si ya está todo cacheado, ni muestres la barra
         if (cached >= TOTAL_FILES) {
             console.log("[App] Caché completa, offline listo");
             updateProgressUI(TOTAL_FILES, TOTAL_FILES, "✅ Listo", true);
@@ -123,7 +174,8 @@ async function trackProgress() {
         updateProgressUI(cached, TOTAL_FILES);
 
         const urls = [
-            "./", "./index.html", "./style.css", "./app.js", "./manifest.json",
+            "./", "./index.html", "./style.css", "./app.js",
+            "./manifest.json", "./assets/Logo.png",
             ...deck.flatMap(c => [c.image, c.sound])
         ];
 
@@ -142,7 +194,6 @@ async function trackProgress() {
                     }).finally(() => clearTimeout(t)).catch(() => {});
                 })
             );
-
             done = Math.min(urls.length, i + BATCH);
             updateProgressUI(done, TOTAL_FILES);
         }
@@ -172,6 +223,8 @@ function drawCard() {
         document.getElementById("cardName").innerText = "Juego terminado";
         return;
     }
+
+    mostrarTextosJuego();
 
     const card = currentDeck.shift();
 
@@ -234,8 +287,7 @@ function restartGame() {
     history.length = 0;
     updateHistory();
     document.getElementById("cardImage").src = "assets/Logo.png";
-    document.getElementById("cardName").innerText = "Presiona Iniciar";
-    document.getElementById("remaining").innerText = "54 cartas restantes";
+    ocultarTextosJuego();
 }
 
 // ============================================================
@@ -244,11 +296,7 @@ function restartGame() {
 window.addEventListener("load", async () => {
     console.log("Lotería cargada");
 
-    const hardTimeout = setTimeout(() => {
-        updateProgressUI(1, 1, "", true);
-    }, 50000);
-
-    // 1. Pedir persistencia ANTES de cachear (mejor momento)
+    // 1. Persistencia
     await pedirPersistencia();
 
     // 2. Registrar SW
@@ -262,6 +310,18 @@ window.addEventListener("load", async () => {
         }
     }
 
-    // 3. Precargar con barra
-    trackProgress().finally(() => clearTimeout(hardTimeout));
+    // 3. ¿Necesitamos precargar?
+    if (!debePrecachear()) {
+        updateProgressUI(1, 1, "", true);
+        return;
+    }
+
+    // 4. Precargar con barra y timeout duro
+    const hardTimeout = setTimeout(() => {
+        updateProgressUI(1, 1, "", true);
+    }, 50000);
+
+    trackProgress()
+        .then(() => marcarPrecacheCompleto())
+        .finally(() => clearTimeout(hardTimeout));
 });
