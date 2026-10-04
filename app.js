@@ -233,7 +233,7 @@ function restartGame() {
     shuffle();
     history.length = 0;
     updateHistory();
-    document.getElementById("cardImage").src = "";
+    document.getElementById("cardImage").src = "assets/Logo.png";
     document.getElementById("cardName").innerText = "Presiona Iniciar";
     document.getElementById("remaining").innerText = "54 cartas restantes";
 }
