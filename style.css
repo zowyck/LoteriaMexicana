@@ -12,58 +12,44 @@ body{
 }
 
 .container{
-
     display:flex;
     justify-content:center;
     align-items:flex-start;
-
     gap:20px;
-
     padding:20px;
-
     flex-wrap:wrap;
 }
 
 .main{
-
     text-align:center;
 }
 
 h1{
-
     color:#facc15;
     margin-bottom:20px;
 }
 
 #cardImage{
-
     width:100%;
     max-width:450px;
-
     min-height:450px;
-
     object-fit:contain;
-
     background:white;
-
     border-radius:15px;
-
     box-shadow:0 0 20px rgba(0,0,0,.4);
+    padding:20px;
 }
 
 #cardName{
-
     margin-top:15px;
     color:#facc15;
 }
 
 #remaining{
-
     margin:10px 0 20px;
 }
 
 .controls{
-
     display:flex;
     justify-content:center;
     flex-wrap:wrap;
@@ -71,57 +57,36 @@ h1{
 }
 
 button{
-
     background:#22c55e;
-
     color:white;
-
     border:none;
-
     border-radius:10px;
-
     padding:12px 20px;
-
     cursor:pointer;
-
     font-size:16px;
 }
 
 button:hover{
-
     background:#16a34a;
 }
 
 .speedBox{
-
     margin-top:20px;
 }
 
 .speedBox select{
-
     padding:8px;
 }
 
 .history{
-
     width:130px;
-}
-
-.history h3{
-
-    text-align:center;
-
-    margin-bottom:10px;
+    padding-top:20px;
 }
 
 .historyCard{
-
     width:100%;
-
     border-radius:10px;
-
     margin-bottom:10px;
-
     background:white;
 }
 
@@ -176,19 +141,9 @@ button:hover{
    RESPONSIVE
    ============================================================ */
 @media (max-width: 600px){
-
-    h1{
-        font-size:1.5rem;
-    }
-
-    #cardImage{
-        min-height:300px;
-    }
-
-    button{
-        padding:10px 14px;
-        font-size:14px;
-    }
+    h1{ font-size:1.5rem; }
+    #cardImage{ min-height:300px; }
+    button{ padding:10px 14px; font-size:14px; }
 
     .history{
         width:100%;
@@ -196,10 +151,7 @@ button:hover{
         flex-wrap:wrap;
         justify-content:center;
         gap:8px;
-    }
-
-    .history h3{
-        width:100%;
+        padding-top:0;
     }
 
     .historyCard{
@@ -207,7 +159,5 @@ button:hover{
         margin-bottom:0;
     }
 
-    #loadText{
-        font-size:1rem;
-    }
+    #loadText{ font-size:1rem; }
 }
