@@ -6,7 +6,7 @@ const deck = [];
 let currentDeck = [];
 const history = [];
 
-const CACHE_NAME = "loteria-v6";
+const CACHE_NAME = "loteria-v7";
 const TOTAL_FILES = 6 + 108; // base + 54 png + 54 mp3
 
 // ============================================================
