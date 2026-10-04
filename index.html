@@ -1,21 +1,3 @@
-<!DOCTYPE html>
-<html lang="es">
-
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lotería Mexicana</title>
-
-<link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="style.css">
-
-<meta name="theme-color" content="#0f172a">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Lotería">
-
-</head>
-
 <body>
 
 <!-- Barra de progreso offline -->
@@ -27,32 +9,45 @@
 </div>
 
 <div class="container">
+
     <div class="main">
-        <h1>Lotería Mexicana</h1>
+
+        <!-- Título oculto al iniciar -->
+        <h1 id="titulo" style="display:none;">Lotería Mexicana</h1>
+
         <img id="cardImage" src="assets/Logo.png" alt="Lotería Mexicana">
-    </div>
-    
-        <h2 id="cardName">
+
+        <!-- Estos dos ocultos al iniciar, se muestran al jugar -->
+        <h2 id="cardName" style="display:none;">
             Presiona Iniciar
         </h2>
-        <div id="remaining">
+
+        <div id="remaining" style="display:none;">
             54 cartas restantes
         </div>
+
         <div class="controls">
+
             <button id="playPauseBtn" onclick="toggleAuto()">
                 ▶ Iniciar
             </button>
+
             <button onclick="drawCard()">
                 ⏭ Carta
             </button>
+
             <button onclick="restartGame()">
                 🔄 Reiniciar
             </button>
+
         </div>
 
         <div class="speedBox">
+
             <label>Tiempo:</label>
+
             <select id="speed">
+
                 <option value="4000">4 s</option>
                 <option value="5000">5 s</option>
                 <option value="6000">6 s</option>
@@ -60,16 +55,23 @@
                 <option value="8000">8 s</option>
                 <option value="9000">9 s</option>
                 <option value="10000">10 s</option>
+
             </select>
+
         </div>
-    
-    <div class="history">
-        <h3>Últimas cartas</h3>
-        <div id="historyList"></div>
+
     </div>
+
+    <div class="history">
+
+        <!-- Título quitado -->
+
+        <div id="historyList"></div>
+
+    </div>
+
 </div>
 
 <script src="app.js"></script>
 
 </body>
-</html>
