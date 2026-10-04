@@ -1,16 +1,14 @@
-const CACHE_NAME = "loteria-v7";
+const CACHE_NAME = "loteria-v6";
 
-// Recursos base
 const baseFiles = [
     "./",
     "./index.html",
     "./style.css",
     "./app.js",
-    "./assets/Logo.png",
-    "./manifest.json"
+    "./manifest.json",
+    "./assets/Logo.png"
 ];
 
-// Cards: 54 imágenes + 54 audios
 const cardFiles = [];
 for (let i = 1; i <= 54; i++) {
     cardFiles.push(`assets/cards/default_${i}.png`);
@@ -19,9 +17,6 @@ for (let i = 1; i <= 54; i++) {
 
 const files = [...baseFiles, ...cardFiles];
 
-// ============================================================
-// Utilidad: fetch con timeout (evita cuelgues en móvil)
-// ============================================================
 function fetchWithTimeout(url, ms = 8000) {
     return new Promise((resolve, reject) => {
         const timer = setTimeout(() => reject(new Error("Timeout: " + url)), ms);
@@ -38,9 +33,6 @@ function fetchWithTimeout(url, ms = 8000) {
     });
 }
 
-// ============================================================
-// INSTALL: precachea en lotes con timeout por archivo
-// ============================================================
 self.addEventListener("install", event => {
     event.waitUntil((async () => {
         const cache = await caches.open(CACHE_NAME);
@@ -67,7 +59,6 @@ self.addEventListener("install", event => {
 
         console.log(`[SW] Precarga: ${ok} ok, ${fail} fallos de ${files.length}`);
 
-        // Si falló más del 20%, aborta (mantiene SW viejo)
         if (fail > files.length * 0.2) {
             throw new Error(`[SW] Abortado: ${fail} fallos`);
         }
@@ -76,9 +67,6 @@ self.addEventListener("install", event => {
     })());
 });
 
-// ============================================================
-// ACTIVATE: limpia cachés viejas y toma control
-// ============================================================
 self.addEventListener("activate", event => {
     event.waitUntil((async () => {
         const keys = await caches.keys();
@@ -90,13 +78,9 @@ self.addEventListener("activate", event => {
     })());
 });
 
-// ============================================================
-// FETCH: cache-first con fallback a red
-// ============================================================
 self.addEventListener("fetch", event => {
     if (event.request.method !== "GET") return;
 
-    // Soporte para Range (audios en Chrome PC)
     if (event.request.headers.get("range")) {
         event.respondWith(
             caches.match(event.request.url).then(c => c || fetch(event.request))
