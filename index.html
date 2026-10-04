@@ -1,3 +1,21 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lotería Mexicana</title>
+
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css">
+
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lotería">
+
+</head>
+
 <body>
 
 <!-- Barra de progreso offline -->
@@ -12,12 +30,12 @@
 
     <div class="main">
 
-        <!-- Título oculto al iniciar -->
+        <!-- Título oculto al iniciar, se muestra al jugar -->
         <h1 id="titulo" style="display:none;">Lotería Mexicana</h1>
 
         <img id="cardImage" src="assets/Logo.png" alt="Lotería Mexicana">
 
-        <!-- Estos dos ocultos al iniciar, se muestran al jugar -->
+        <!-- Textos de juego: ocultos al iniciar, visibles al jugar -->
         <h2 id="cardName" style="display:none;">
             Presiona Iniciar
         </h2>
@@ -64,7 +82,7 @@
 
     <div class="history">
 
-        <!-- Título quitado -->
+        <!-- Título "Últimas cartas" quitado, el contenedor queda igual -->
 
         <div id="historyList"></div>
 
@@ -75,3 +93,4 @@
 <script src="app.js"></script>
 
 </body>
+</html>
