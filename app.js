@@ -1,18 +1,45 @@
 let playing = false;
 let timer = null;
+let currentAudio = null;   // 🔑 mantiene referencia viva al audio
 
 const deck = [];
 let currentDeck = [];
 const history = [];
 
-// 🔹 ÚNICA FUENTE DE VERDAD: las 54 cartas
+// ============================================================
+// ÚNICA FUENTE DE VERDAD: las 54 cartas
+// ============================================================
 for (let i = 1; i <= 54; i++) {
     deck.push({
         id: i,
         image: `assets/cards/default_${i}.png`,
-        sound: `assets/cards/default_${i}.mp3`   // ✅ sin "sound/"
+        sound: `assets/cards/default_${i}.mp3`   // ✅ misma ruta que el SW
     });
 }
+
+// ============================================================
+// DESBLOQUEO DE AUDIO (obligatorio en Chrome/Edge/Safari PC)
+// ============================================================
+let audioUnlocked = false;
+
+function unlockAudio() {
+    if (audioUnlocked) return;
+
+    // Audio silencioso de 1 muestra para desbloquear el contexto
+    const a = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=");
+    a.volume = 0;
+    a.play().then(() => {
+        audioUnlocked = true;
+        console.log("[App] Audio desbloqueado");
+    }).catch(err => {
+        // Puede fallar la primera vez si el navegador aún no considera
+        // la interacción como válida; se reintenta en el siguiente evento
+    });
+}
+
+["click", "touchstart", "keydown", "pointerdown"].forEach(ev =>
+    document.addEventListener(ev, unlockAudio)
+);
 
 // ============================================================
 // PRECARGA FORZADA (usa el array deck, sin escaneo)
@@ -26,21 +53,15 @@ function preloadCards() {
     navigator.serviceWorker.ready.then(reg => {
         if (!reg.active) return;
 
-        // Lista explícita desde deck: imagen + sonido
         const urls = deck.flatMap(c => [c.image, c.sound]);
-
         reg.active.postMessage({ type: "PRECACHE", urls });
         console.log(`[App] Precarga enviada: ${urls.length} archivos`);
     });
 
-    // Además, fuerza la descarga en el cliente para que el navegador
-    // las tenga también en su caché HTTP (por si el SW tarda)
+    // Fuerza descarga en cliente también (por si el SW tarda)
     deck.forEach(c => {
         const img = new Image();
         img.src = c.image;
-
-        // Los audios no se pueden "descargar" sin reproducirlos,
-        // pero un fetch() sí los mete al caché del navegador
         fetch(c.sound, { cache: "force-cache" }).catch(() => {});
     });
 }
@@ -67,14 +88,39 @@ function drawCard() {
 
     const card = currentDeck.shift();
 
+    // --- Imagen ---
     const img = document.getElementById("cardImage");
     img.src = card.image;
     img.onerror = () => console.log("No encontró imagen:", card.image);
 
-    const audio = new Audio(card.sound);
-    audio.onerror = () => console.log("No encontró audio:", card.sound);
-    audio.play().catch(err => console.log(err));
+    // --- Audio: detén el anterior antes de sonar el nuevo ---
+    if (currentAudio) {
+        try {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+        } catch (_) {}
+        currentAudio = null;
+    }
 
+    currentAudio = new Audio(card.sound);
+    currentAudio.preload = "auto";
+    currentAudio.onerror = () => console.log("No encontró audio:", card.sound);
+
+    const playPromise = currentAudio.play();
+
+    if (playPromise !== undefined) {
+        playPromise.catch(err => {
+            // Si está bloqueado, intenta desbloquear y reintentar una vez
+            if (err.name === "NotAllowedError") {
+                unlockAudio();
+                console.warn("[Audio] Bloqueado, haz clic en la página para activar sonido");
+            } else {
+                console.log("[Audio] Error:", err);
+            }
+        });
+    }
+
+    // --- UI ---
     document.getElementById("cardName").innerText = "Carta " + card.id;
     document.getElementById("remaining").innerText =
         currentDeck.length + " cartas restantes";
@@ -130,11 +176,9 @@ function restartGame() {
 window.addEventListener("load", () => {
     console.log("Lotería cargada");
 
-    // Registra SW (si no lo haces ya en index.html)
     if ("serviceWorker" in navigator) {
         navigator.serviceWorker.register("./sw.js").catch(console.error);
     }
 
-    // Fuerza la precarga de los 108 archivos
     preloadCards();
 });
