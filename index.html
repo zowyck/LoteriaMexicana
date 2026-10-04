@@ -9,9 +9,27 @@
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="style.css">
 
+<!-- PWA: color de la barra del navegador en móvil -->
+<meta name="theme-color" content="#1a1a1a">
+
+<!-- PWA: para iOS -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lotería">
+
 </head>
 
 <body>
+
+<!-- ============================================================
+     BARRA DE PROGRESO (se oculta sola al terminar la descarga)
+     ============================================================ -->
+<div id="loadProgress">
+    <p id="loadText">Preparando para uso offline…</p>
+    <div class="loadBarWrap">
+        <div id="loadBar"></div>
+    </div>
+</div>
 
 <div class="container">
 
@@ -19,7 +37,7 @@
 
         <h1>Lotería Mexicana</h1>
 
-        <img id="cardImage">
+        <img id="cardImage" alt="Carta de lotería">
 
         <h2 id="cardName">
             Presiona Iniciar
