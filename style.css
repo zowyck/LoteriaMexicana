@@ -161,3 +161,73 @@ button:hover{
     .historyCard{ width:50px; }
     #loadText{ font-size:1rem; }
 }
+/* ============================================================
+   SELECTOR DE TIEMPO (botón + menú)
+   ============================================================ */
+.speedBox{
+    position:relative;
+    margin-top:20px;
+    display:flex;
+    justify-content:center;
+}
+
+.speedBtn{
+    background:#1e293b;
+    color:#facc15;
+    border:2px solid #334155;
+    padding:10px 20px;
+    font-size:16px;
+    border-radius:10px;
+    font-weight:bold;
+    min-width:120px;
+}
+
+.speedBtn:hover{
+    background:#334155;
+    border-color:#facc15;
+}
+
+.speedMenu{
+    position:absolute;
+    bottom:110%;       /* aparece arriba del botón */
+    left:50%;
+    transform:translateX(-50%) scale(0.95);
+    background:#1e293b;
+    border:2px solid #334155;
+    border-radius:10px;
+    padding:6px;
+    display:none;
+    flex-direction:column;
+    gap:4px;
+    z-index:100;
+    box-shadow:0 8px 24px rgba(0,0,0,.5);
+    opacity:0;
+    transition:opacity .15s ease, transform .15s ease;
+    min-width:100px;
+}
+
+.speedMenu.open{
+    display:flex;
+    opacity:1;
+    transform:translateX(-50%) scale(1);
+}
+
+.speedMenu button{
+    background:transparent;
+    color:white;
+    padding:8px 12px;
+    font-size:14px;
+    border-radius:6px;
+    width:100%;
+    text-align:center;
+}
+
+.speedMenu button:hover{
+    background:#334155;
+}
+
+.speedMenu button.active{
+    background:#22c55e;
+    color:white;
+    font-weight:bold;
+}
