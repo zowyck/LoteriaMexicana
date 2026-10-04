@@ -68,38 +68,76 @@ const cardFiles = [
 
 const files = [...baseFiles, ...cardFiles];
 
-// INSTALL: cachea todo, pero sin romperse si algo falla
+// ============================================================
+// INSTALL — cachea todo, uno por uno, sin romperse
+// Si fallan demasiados archivos, ABORTA (no reemplaza el SW viejo)
+// ============================================================
 self.addEventListener("install", event => {
-    self.skipWaiting();
-    event.waitUntil(
-        caches.open(CACHE_NAME).then(async cache => {
-            const results = await Promise.allSettled(
-                files.map(url =>
-                    cache.add(url).catch(err => {
-                        console.warn("[SW] Falló cachear:", url, err);
-                    })
-                )
-            );
-            const failed = results.filter(r => r.status === "rejected").length;
-            console.log(`[SW] Cache listo. Fallos: ${failed}/${files.length}`);
-        })
-    );
+    event.waitUntil((async () => {
+        const cache = await caches.open(CACHE_NAME);
+
+        const results = await Promise.allSettled(
+            files.map(url =>
+                cache.add(url).catch(err => {
+                    console.warn("[SW] Falló cachear:", url, err);
+                    throw err;
+                })
+            )
+        );
+
+        const failed = results.filter(r => r.status === "rejected").length;
+        console.log(`[SW] Cache listo. Fallos: ${failed}/${files.length}`);
+
+        // Si falló más del 20% de archivos, aborta instalación
+        // (así el SW viejo sigue sirviendo la app offline)
+        if (failed > files.length * 0.2) {
+            throw new Error(`[SW] Instalación abortada: ${failed} archivos fallaron`);
+        }
+
+        await self.skipWaiting();
+    })());
 });
 
-// ACTIVATE: limpia cachés viejas y toma control
+// ============================================================
+// ACTIVATE — solo borra cachés viejas si la nueva está completa
+// ============================================================
 self.addEventListener("activate", event => {
-    event.waitUntil(
-        caches.keys()
-            .then(keys => Promise.all(
-                keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
-            ))
-            .then(() => self.clients.claim())
-    );
+    event.waitUntil((async () => {
+        const cache = await caches.open(CACHE_NAME);
+        const cached = await cache.keys();
+
+        // Verifica que la caché nueva esté realmente llena
+        if (cached.length < files.length * 0.8) {
+            console.warn(`[SW] Caché incompleta (${cached.length}/${files.length}), conservo las viejas`);
+            return self.clients.claim();
+        }
+
+        const keys = await caches.keys();
+        await Promise.all(
+            keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+        );
+
+        await self.clients.claim();
+        console.log("[SW] Activado y tomando control");
+    })());
 });
 
-// FETCH: cache-first con fallback a red
+// ============================================================
+// FETCH — cache-first con fallback a red y a index.html
+// ============================================================
 self.addEventListener("fetch", event => {
     if (event.request.method !== "GET") return;
+
+    // Soporte para peticiones Range (audios en Chrome PC)
+    if (event.request.headers.get("range")) {
+        event.respondWith(
+            caches.match(event.request.url).then(cached => {
+                if (cached) return cached;
+                return fetch(event.request);
+            })
+        );
+        return;
+    }
 
     event.respondWith(
         caches.match(event.request).then(cached => {
@@ -118,4 +156,27 @@ self.addEventListener("fetch", event => {
             });
         })
     );
+});
+
+// ============================================================
+// MENSAJE — precarga forzada desde app.js
+// ============================================================
+self.addEventListener("message", event => {
+    if (event.data?.type === "PRECACHE") {
+        const urls = event.data.urls || [];
+        event.waitUntil(
+            caches.open(CACHE_NAME).then(cache =>
+                Promise.allSettled(
+                    urls.map(url =>
+                        fetch(url, { cache: "no-store" })
+                            .then(res => {
+                                if (res.ok) return cache.put(url, res);
+                                throw new Error("HTTP " + res.status);
+                            })
+                            .catch(err => console.warn("[SW] Falló precache:", url, err))
+                    )
+                )
+            )
+        );
+    }
 });
