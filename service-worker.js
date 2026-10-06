@@ -1,4 +1,4 @@
-const CACHE_NAME = "loteria-v7";
+const CACHE_NAME = "loteria-v8";
 
 const baseFiles = [
     "./",
