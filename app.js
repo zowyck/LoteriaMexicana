@@ -12,9 +12,9 @@ const history = [];
 // ============================================================
 // CONFIGURACIÓN DE CACHÉ Y VERSIÓN
 // ============================================================
-const CACHE_NAME = "loteria-v7";
+const CACHE_NAME = "loteria-v8";
 const TOTAL_FILES = 6 + 108;
-const APP_VERSION = "1.5.0";
+const APP_VERSION = "1.5.1";
 const LS_KEY = "loteria_precache_info";
 
 // ============================================================
@@ -302,7 +302,7 @@ function updateHistory() {
 
 function startAuto() {
     const select = document.getElementById("speed");
-    const speed = select ? parseInt(select.value) : 7000;
+    const speed = select ? parseInt(select.value) : 4000;
 
     drawCard();
     timer = setInterval(drawCard, speed);
