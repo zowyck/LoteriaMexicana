@@ -29,41 +29,66 @@
 
     <div class="main">
 
-        <!-- Barra superior: contador + historial -->
-        <div id="topBar" style="display:none;">
-            <div id="remaining">54 cartas restantes</div>
-            <div id="historyList"></div>
+        <!-- ===================== MODO NAIPES ===================== -->
+        <div id="cardView">
+            <div id="topBar" style="display:none;">
+                <div id="remaining">54 naipes restantes</div>
+                <div id="historyList"></div>
+            </div>
+
+            <img id="cardImage" src="assets/Logo.png" alt="Lotería Mexicana" onclick="toggleAuto()">
+
+            <div class="controls">
+                <button id="playPauseBtn" onclick="toggleAuto()">▶ Iniciar</button>
+                <button onclick="drawCard()">⏭ Naipe</button>
+                <button onclick="restartGame()">🔄 Reiniciar</button>
+            </div>
+
+            <!-- Barra inferior: Tiempo + Cartas -->
+            <div class="bottomBar">
+                <div class="speedBox">
+                    <button id="speedBtn" class="speedBtn" onclick="toggleSpeedMenu(event)">
+                        ⏱ 4 s
+                    </button>
+                    <div id="speedMenu" class="speedMenu">
+                        <button onclick="setSpeed(3000, this)">3 s</button>
+                        <button onclick="setSpeed(4000, this)" class="active">4 s</button>
+                        <button onclick="setSpeed(5000, this)">5 s</button>
+                        <button onclick="setSpeed(6000, this)">6 s</button>
+                        <button onclick="setSpeed(7000, this)">7 s</button>
+                    </div>
+
+                    <select id="speed" style="display:none;">
+                        <option value="3000">3 s</option>
+                        <option value="4000" selected>4 s</option>
+                        <option value="5000">5 s</option>
+                        <option value="6000">6 s</option>
+                        <option value="7000">7 s</option>
+                    </select>
+                </div>
+
+                <button id="gotoTablesBtn" class="modeBtn" onclick="setMode('tables')">🧩 Cartas</button>
+            </div>
         </div>
 
-        <img id="cardImage" src="assets/Logo.png" alt="Lotería Mexicana" onclick="toggleAuto()">
+        <!-- ===================== MODO CARTAS ===================== -->
+        <div id="tablesView" style="display:none;">
 
-<div class="controls">
-    <button id="playPauseBtn" onclick="toggleAuto()">▶ Iniciar</button>
-    <button onclick="drawCard()">⏭ Carta</button>
-    <button onclick="restartGame()">🔄 Reiniciar</button>
-</div>
+            <div id="tablesList">
+                <h2 style="color:#facc15;margin-bottom:12px;">Elige una carta (50)</h2>
+                <div id="tablesGrid"></div>
+            </div>
 
-<div class="speedBox">
-    <button id="speedBtn" class="speedBtn" onclick="toggleSpeedMenu(event)">
-        ⏱ 4 s
-    </button>
-    <div id="speedMenu" class="speedMenu">
-        <button onclick="setSpeed(3000, this)">3 s</button>
-        <button onclick="setSpeed(4000, this)" class="active">4 s</button>
-        <button onclick="setSpeed(5000, this)">5 s</button>
-        <button onclick="setSpeed(6000, this)">6 s</button>
-        <button onclick="setSpeed(7000, this)">7 s</button>
-    </div>
+            <div id="tablePlay" style="display:none;">
+                <div id="tableTitle" style="color:#facc15;font-weight:bold;margin-bottom:8px;"></div>
+                <div id="tableBoard"></div>
+                <div class="controls" style="margin-top:15px;">
+                    <button onclick="volverAListaTablas()">← Regresar</button>
+                    <button onclick="reiniciarMarcado()">🔄 Reiniciar marcas</button>
+                </div>
+            </div>
 
-    <!-- Select oculto -->
-    <select id="speed" style="display:none;">
-        <option value="3000">3 s</option>
-        <option value="4000" selected>4 s</option>
-        <option value="5000">5 s</option>
-        <option value="6000">6 s</option>
-        <option value="7000">7 s</option>
-    </select>
-</div>
+        </div>
 
     </div>
 
