@@ -53,9 +53,12 @@ button:hover{background:#16a34a}
 .tablaCell{position:relative;background:#fff;border-radius:8px;padding:6px;cursor:pointer;aspect-ratio:4/6;display:flex;align-items:center;justify-content:center;transition:transform .1s ease;user-select:none;-webkit-tap-highlight-color:transparent}
 .tablaCell:hover{transform:scale(1.03)}
 .tablaCell img{width:100%;height:100%;object-fit:contain;pointer-events:none}
-.tablaCell .marca{display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-size:2.2rem;color:#ef4444;font-weight:bold;background:rgba(239,68,68,.15);border-radius:8px;pointer-events:none}
+
+/* CELDA MARCADA */
+.tablaCell .marca{display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-size:2.8rem;color:#dc2626;font-weight:900;background:rgba(220,38,38,.35);border-radius:8px;pointer-events:none;text-shadow:0 0 6px rgba(0,0,0,.7),0 2px 4px rgba(0,0,0,.9);line-height:1}
 .tablaCell.marcada .marca{display:flex}
-.tablaCell.marcada{box-shadow:0 0 0 3px #ef4444 inset}
+.tablaCell.marcada{box-shadow:0 0 0 4px #dc2626 inset,0 0 12px rgba(220,38,38,.6)}
+.tablaCell.marcada img{opacity:.55;filter:brightness(.85)}
 
 /* RESPONSIVE */
 @media (max-width:600px){
@@ -65,7 +68,7 @@ button{padding:10px 14px;font-size:14px}
 #loadText{font-size:1rem}
 #tablesGrid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:26px 8px}
 .miniLabel{font-size:10px}
-.tablaCell .marca{font-size:1.6rem}
 #tableBoard{padding:8px;gap:6px}
 .tablaCell{aspect-ratio:4/6}
+.tablaCell .marca{font-size:2rem}
 }
