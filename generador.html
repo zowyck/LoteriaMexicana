@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Generador de Cartas 4×4 - Lotería</title>
+<title>Generador de Cartas 4×4 - Lotería (51 Cartas Blindaje Total)</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{
@@ -41,7 +41,7 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>🎴 Generador de Cartas 4×4 — Set Fijo Verificado</h1>
+  <h1>🎴 Generador de Cartas 4×4 — 51 Cartas Blindaje Total</h1>
 
   <div class="stats" id="stats">Generando…</div>
 
@@ -63,13 +63,13 @@
 // ============================================================
 const COLS = 4;
 const ROWS = 4;
-const TOTAL = 50;
+const TOTAL = 51; // 51 Cartas solicitadas
 const IDS = 54;
 const MAX_INTENTOS = 5000000;
-const SEMILLA_DEFAULT = 20240607;
+const SEMILLA_DEFAULT = 2995588327;
 
 // ============================================================
-// GENERADOR CON LCG DETERMINISTA
+// GENERADOR DEFINITIVO CON CANDADO INTERNO Y GLOBAL ÚNICO
 // ============================================================
 function generarSet(semilla) {
     let seed = semilla >>> 0;
@@ -87,59 +87,53 @@ function generarSet(semilla) {
     };
 
     const pool = Array.from({ length: IDS }, (_, i) => i + 1);
-    const filasH  = new Set();
-    const colsV   = new Set();
-    const esq     = new Set();
-    const centros = new Set();
-    const out     = [];
-
+    
+    // ÚNICO Set Global: Guarda las 4 combinaciones de números ordenadas (ej. "2-8-27-53")
+    // Sin importar si es fila, columna, centro, esquina o diagonal.
+    const combinacionesUsadas = new Set();
+    
+    const out = [];
     let intentos = 0;
     const t0 = performance.now();
+
+    // Función auxiliar: ordena los números para que el orden visual no importe
+    const firma = (arr) => arr.slice().sort((a, b) => a - b).join("-");
 
     while (out.length < TOTAL && intentos < MAX_INTENTOS) {
         intentos++;
         const c = shuffle(pool).slice(0, COLS * ROWS);
 
-        // 4 filas horizontales
-        const kF = [];
+        // 1. Extraer TODAS las figuras de esta carta
+        const filas = [
+            firma(c.slice(0, 4)), firma(c.slice(4, 8)), 
+            firma(c.slice(8, 12)), firma(c.slice(12, 16))
+        ];
+        const cols = [
+            firma([c[0], c[4], c[8], c[12]]), firma([c[1], c[5], c[9], c[13]]),
+            firma([c[2], c[6], c[10], c[14]]), firma([c[3], c[7], c[11], c[15]])
+        ];
+        const esquinas = firma([c[0], c[3], c[12], c[15]]);
+        const centros  = firma([c[5], c[6], c[9], c[10]]);
+        const diag1    = firma([c[0], c[5], c[10], c[15]]);
+        const diag2    = firma([c[3], c[6], c[9], c[12]]);
+
+        // Juntar todas en un solo arreglo (12 figuras por carta)
+        const figurasCarta = [ ...filas, ...cols, esquinas, centros, diag1, diag2 ];
+
+        // 2. Candado Interno: ¿Se repite algo dentro de esta misma carta?
+        // Si el Set tiene menos de 12, es porque hay duplicados internos (ej. esquina = centro)
+        if (new Set(figurasCarta).size !== 12) continue;
+
+        // 3. Candado Global: ¿Alguna de estas 12 figuras ya se usó en otra carta?
         let ok = true;
-        for (let r = 0; r < ROWS && ok; r++) {
-            const k = "H:" + c.slice(r * COLS, r * COLS + COLS).join("-");
-            if (filasH.has(k)) { ok = false; break; }
-            kF.push(k);
+        for (const fig of figurasCarta) {
+            if (combinacionesUsadas.has(fig)) { ok = false; break; }
         }
-
-        // 4 columnas verticales
-        const kC = [];
-        if (ok) {
-            for (let x = 0; x < COLS && ok; x++) {
-                const col = [c[x], c[x + 4], c[x + 8], c[x + 12]];
-                const k = "V:" + col.join("-");
-                if (colsV.has(k)) { ok = false; break; }
-                kC.push(k);
-            }
-        }
-
-        // 4 esquinas (posiciones 0, 3, 12, 15)
-        let kE = null;
-        if (ok) {
-            kE = [c[0], c[3], c[12], c[15]].sort((a, b) => a - b).join("-");
-            if (esq.has(kE)) ok = false;
-        }
-
-        // 4 centros (posiciones 5, 6, 9, 10)
-        let kM = null;
-        if (ok) {
-            kM = [c[5], c[6], c[9], c[10]].sort((a, b) => a - b).join("-");
-            if (centros.has(kM)) ok = false;
-        }
-
         if (!ok) continue;
 
-        kF.forEach(k => filasH.add(k));
-        kC.forEach(k => colsV.add(k));
-        esq.add(kE);
-        centros.add(kM);
+        // 4. Si pasó todo, guardamos TODAS las figuras en el mismo candado
+        figurasCarta.forEach(fig => combinacionesUsadas.add(fig));
+        
         out.push(c);
     }
 
@@ -149,46 +143,47 @@ function generarSet(semilla) {
         tablas: out,
         intentos,
         ms: (t1 - t0).toFixed(0),
-        filas: filasH.size,
-        cols: colsV.size,
-        esquinas: esq.size,
-        centros: centros.size,
+        totalCombinaciones: combinacionesUsadas.size,
         ok: out.length === TOTAL
     };
 }
 
 // ============================================================
-// VERIFICACIÓN INDEPENDIENTE (re-chequea lo generado)
+// VERIFICACIÓN INDEPENDIENTE (Re-chequea lo generado)
 // ============================================================
 function verificarSet(tablas) {
-    const F = new Set(), C = new Set(), E = new Set(), M = new Set();
+    const combinacionesUsadas = new Set();
     let errores = 0;
+    const firma = (arr) => arr.slice().sort((a, b) => a - b).join("-");
 
     tablas.forEach((t, i) => {
-        if (t.length !== 16 || new Set(t).size !== 16) {
-            console.error(`Carta #${i + 1}: no tiene 16 IDs únicos`);
-            errores++;
+        // Extraer figuras
+        const filas = [firma(t.slice(0,4)), firma(t.slice(4,8)), firma(t.slice(8,12)), firma(t.slice(12,16))];
+        const cols = [firma([t[0],t[4],t[8],t[12]]), firma([t[1],t[5],t[9],t[13]]), firma([t[2],t[6],t[10],t[14]]), firma([t[3],t[7],t[11],t[15]])];
+        const e = firma([t[0],t[3],t[12],t[15]]);
+        const m = firma([t[5],t[6],t[9],t[10]]);
+        const d1 = firma([t[0],t[5],t[10],t[15]]);
+        const d2 = firma([t[3],t[6],t[9],t[12]]);
+
+        const figurasCarta = [...filas, ...cols, e, m, d1, d2];
+
+        // Chequeo Interno
+        if (new Set(figurasCarta).size !== 12) { 
+            errores++; 
+            console.error(`Carta ${i+1}: Figuras internas repetidas`); 
         }
-        for (let r = 0; r < 4; r++) {
-            const k = "H:" + t.slice(r * 4, r * 4 + 4).join("-");
-            if (F.has(k)) { errores++; console.error(`Fila repetida: carta ${i+1}`); }
-            F.add(k);
-        }
-        for (let x = 0; x < 4; x++) {
-            const col = [t[x], t[x+4], t[x+8], t[x+12]];
-            const k = "V:" + col.join("-");
-            if (C.has(k)) { errores++; console.error(`Columna repetida: carta ${i+1}`); }
-            C.add(k);
-        }
-        const ke = [t[0], t[3], t[12], t[15]].sort((a,b)=>a-b).join("-");
-        if (E.has(ke)) { errores++; console.error(`Esquinas repetidas: carta ${i+1}`); }
-        E.add(ke);
-        const km = [t[5], t[6], t[9], t[10]].sort((a,b)=>a-b).join("-");
-        if (M.has(km)) { errores++; console.error(`Centros repetidos: carta ${i+1}`); }
-        M.add(km);
+
+        // Chequeo Global
+        figurasCarta.forEach(fig => {
+            if (combinacionesUsadas.has(fig)) {
+                errores++;
+                console.error(`Combinación repetida en carta ${i+1}: [${fig}]`);
+            }
+            combinacionesUsadas.add(fig);
+        });
     });
 
-    return { errores, filas: F.size, cols: C.size, esquinas: E.size, centros: M.size };
+    return { errores, totalCombinaciones: combinacionesUsadas.size };
 }
 
 // ============================================================
@@ -224,12 +219,10 @@ function render(semilla) {
             <div>Semilla: <span>${semilla}</span></div>
             <div>Cartas generadas: <span class="${okClass}">${r.tablas.length} / ${TOTAL}</span></div>
             <div>Intentos: <span>${r.intentos.toLocaleString()}</span> — Tiempo: <span>${r.ms} ms</span></div>
-            <div>Filas únicas: <span class="${r.filas === 200 ? 'ok' : 'bad'}">${r.filas} / 200</span></div>
-            <div>Columnas únicas: <span class="${r.cols === 200 ? 'ok' : 'bad'}">${r.cols} / 200</span></div>
-            <div>Esquinas únicas: <span class="${r.esquinas === 50 ? 'ok' : 'bad'}">${r.esquinas} / 50</span></div>
-            <div>Centros únicos: <span class="${r.centros === 50 ? 'ok' : 'bad'}">${r.centros} / 50</span></div>
+            <div>Combinaciones Únicas Totales: <span class="${r.totalCombinaciones === TOTAL * 12 ? 'ok' : 'bad'}">
+                ${r.totalCombinaciones} / ${TOTAL * 12}</span></div>
             <div>Verificación independiente: <span class="${verif.errores === 0 ? 'ok' : 'bad'}">
-                ${verif.errores === 0 ? '✅ 0 errores' : '❌ ' + verif.errores + ' errores'}</span></div>
+                ${verif.errores === 0 ? '✅ 0 errores (Ninguna figura se repite en ninguna forma ni orden)' : '❌ ' + verif.errores + ' errores'}</span></div>
         `;
 
         document.getElementById("output").value = formatearArray(r.tablas);
