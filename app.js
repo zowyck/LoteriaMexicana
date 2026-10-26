@@ -334,7 +334,7 @@ function restartGame() {
 // ============================================================
 const TABLA_COLS = 4;
 const TABLA_ROWS = 4;
-const TABLAS_TOTALES = 50;
+const TABLAS_TOTALES = 51;
 const TOTAL_CELDAS = TABLA_COLS * TABLA_ROWS; // 16
 
 // ---------- Set FIJO base 4x4 (sin filas, columnas ni esquinas repetidas) ----------
